@@ -7,6 +7,8 @@ import javafx.scene.control.{Label, TableColumn, TableView}
 import scalafx.Includes.*
 import scalafx.scene.control.Alert
 import scalafx.scene.control.Alert.AlertType
+import scala.util.{Failure, Success}
+
 @FXML
 class PersonOverviewController():
   @FXML
@@ -56,31 +58,48 @@ class PersonOverviewController():
   /**
    * Called when the user clicks on the delete button.
    */
-  def handleDeletePerson(action: ActionEvent) =
+  def handleDeletePerson(action : ActionEvent) =
     val selectedIndex = personTable.selectionModel().selectedIndex.value
+    val selectedPerson = personTable.selectionModel().selectedItem.value
     if (selectedIndex >= 0) then
-      personTable.items().remove(selectedIndex)
+      selectedPerson.save() match
+        case Success(x) =>
+          personTable.items().remove(selectedIndex);
+        case Failure(e) =>
+          val alert = new Alert(Alert.AlertType.Warning):
+            initOwner(MainApp.stage)
+            title = "Failed to Save"
+            headerText = "Database Error"
+            contentText = "Database problem filed to save changes"
+          .showAndWait()
     else
-      // Nothing selected.
-      val alert = new Alert(AlertType.Warning):
-        initOwner(MainApp.stage)
-        title = "No Selection"
-        headerText = "No Person Selected"
-        contentText = "Please select a person in the table."
-      alert.showAndWait()
+        // Nothing selected.
+        val alert = new Alert(AlertType.Warning):
+          initOwner(MainApp.stage)
+          title       = "No Selection"
+          headerText  = "No Person Selected"
+          contentText = "Please select a person in the table."
+        .showAndWait()
+
 
   def handleNewPerson(action: ActionEvent) =
     val person = new Person("", "")
-    val okClicked = MainApp.showPersonEditDialog(person);
-    if (okClicked) then
+    val okClicked = MainApp.showPersonEditDialog(person)
+    if (okClicked) then {
       MainApp.personData += person
+      person.save()
+    }
+
 
   def handleEditPerson(action: ActionEvent) =
     val selectedPerson = personTable.selectionModel().selectedItem.value
     if (selectedPerson != null) then
       val okClicked = MainApp.showPersonEditDialog(selectedPerson)
 
-      if (okClicked) then showPersonDetails(Some(selectedPerson))
+      if (okClicked) then{
+         showPersonDetails(Some(selectedPerson))
+         selectedPerson.save()
+      }
 
     else
       // Nothing selected.
@@ -89,4 +108,5 @@ class PersonOverviewController():
         title = "No Selection"
         headerText = "No Person Selected"
         contentText = "Please select a person in the table."
-      alert.showAndWait()
+      .showAndWait()
+

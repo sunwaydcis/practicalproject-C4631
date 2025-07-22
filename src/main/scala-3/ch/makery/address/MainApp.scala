@@ -1,8 +1,8 @@
 package ch.makery.address
 
-
 import ch.makery.address.model.Person
-import ch.makery.address.view.PersonEditDialogController
+import ch.makery.address.util.Database
+import ch.makery.address.view.{PersonEditDialogController, PersonOverviewController}
 import javafx.fxml.FXMLLoader
 import scalafx.application.JFXApp3
 import scalafx.application.JFXApp3.PrimaryStage
@@ -15,9 +15,12 @@ import scalafx.stage.{Modality, Stage}
 
 object MainApp extends JFXApp3:
 
+  Database.setupDB()
+  
   //Window Root Pane
   var roots: Option[scalafx.scene.layout.BorderPane] = None
   var cssResource = getClass.getResource("view/DarkTheme.css")
+  var personOverviewController: Option[PersonOverviewController] = None
   /**
    * The data as an observable list of Persons.
    */
@@ -25,15 +28,8 @@ object MainApp extends JFXApp3:
   /**
    * Constructor
    */
-  personData += new Person("Hans", "Muster")
-  personData += new Person("Ruth", "Mueller")
-  personData += new Person("Heinz", "Kurz")
-  personData += new Person("Cornelia", "Meier")
-  personData += new Person("Werner", "Meyer")
-  personData += new Person("Lydia", "Kunz")
-  personData += new Person("Anna", "Best")
-  personData += new Person("Stefan", "Meier")
-  personData += new Person("Martin", "Mueller")
+  //assign all person into personData array
+  personData ++= Person.getAllPersons
 
 
   override def start(): Unit =
@@ -63,9 +59,9 @@ object MainApp extends JFXApp3:
     val loader = new FXMLLoader(resource)
     loader.load()
     val roots = loader.getRoot[jfxs.layout.AnchorPane]
-    val controller = loader.getController[ch.makery.address.view.PersonOverviewController]
+    val ctrl = loader.getController[ch.makery.address.view.PersonOverviewController]
+    personOverviewController = Option(ctrl)
     this.roots.get.center = roots
-    controller.initialize()
 
   def showPersonEditDialog(person: Person): Boolean =
     val resource = getClass.getResource("view/PersonEditDialog.fxml")
